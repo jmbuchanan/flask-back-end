@@ -62,6 +62,8 @@ class Repository:
         c = self.conn.cursor()
         c.execute(sql)
 
+
+        #asterisk unpacks row tuple into args
         for row in c.fetchall():
             auction = PriceOverTime(*row)
             results.append(auction)
