@@ -4,19 +4,25 @@ from model import PriceOverTime, PriceStats
 from api import ApiGateway
 
 class Repository:
+    "Repository is the class that handles database interactions."
 
-    conn = psycopg2.connect("dbname=db user=user password=xxxxx")
+
+    #TODO: Need a better way to handle username and pass
+    conn = psycopg2.connect("dbname=xxxxx user=xxxxx password=xxxxx")
 
     def __init__ (self):
         pass
 
     def update_auction_data(self):
+        "Queries Blizzard API for auction data and loads the JSON into the database."
 
         gateway = ApiGateway()
         auction_data = gateway.get_auction_data()
 
         c = self.conn.cursor()
 
+        #SQL contains "ON CONFLICT... DO NOTHING" because auction_id is a unique
+        #constraint
         for row in auction_data:
 
             c.execute('INSERT INTO auctions(auction_id, item_id, owner, bid, ' +
@@ -33,8 +39,11 @@ class Repository:
 
 
     def get_historical_prices(self):
-        results = []
+        "Queries database for auction data from the last 14 days."
 
+        results = []
+        
+        #price is divided by 10000 to convert from copper to gold denomination
         sql = '''
                 SELECT 
                     items.name AS name,
@@ -63,6 +72,7 @@ class Repository:
 
         return results
 
+#this script is run hourly by a cronjob to regularly fetch auction data
 if __name__ == "__main__":
     repo = Repository()
     repo.update_auction_data()
